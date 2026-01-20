@@ -1,0 +1,12 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: blog_mysql
+    environment:
+      MYSQL_DATABASE: blogdb
+      MYSQL_USER: blog
+      MYSQL_PASSWORD: blogpass
+      MYSQL_ROOT_PASSWORD: blogpass
+    ports:
+      - "3307:3306"
+    command: ["--default-authentication-plugin=mysql_native_password"]
