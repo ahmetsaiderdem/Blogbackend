@@ -36,6 +36,15 @@ public class PostDtos {
             String slug,
             Instant publishedAt
     ){}
+
+    public record MyPostListItemResponse(
+            long id,
+            String title,
+            String slug,
+            String status,
+            java.time.Instant publishedAt,
+            java.time.Instant updatedAt
+    ){}
     public record PageMeta(int page,int size,long total){}
     public record PageResponse<T>(List<T> items, PageMeta meta){}
 }

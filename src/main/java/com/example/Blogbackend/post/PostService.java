@@ -90,6 +90,32 @@ public class PostService {
         return new PostDtos.PageResponse<>(list,new PostDtos.PageMeta(safePage,safeSize,total));
     }
 
+
+    public PostDtos.PageResponse<PostDtos.MyPostListItemResponse> listMine(long requestUid,String status, String q, int page, int size){
+        int safePage = Math.max(page,0);
+        int safeSize = Math.min(Math.max(size,1),50);
+        int offset = safePage * safeSize;
+
+        long total= posts.countMine(requestUid,status,q);
+
+        var items = posts.listMine(requestUid,status,q,safeSize,offset).stream()
+                .map(p-> new PostDtos.MyPostListItemResponse(
+                        p.id(),
+                        p.title(),
+                        p.slug(),
+                        p.status().name(),
+                        p.publishedAt(),
+                        p.updatedAt()
+                )).toList();
+        return new PostDtos.PageResponse<>(items,new PostDtos.PageMeta(safePage,safeSize,total));
+    }
+
+
+    public PostDtos.PostDetailResponse getMineById(long postId,long requestUid,boolean isAdmin){
+        Post p = posts.findById(postId).orElseThrow(()->ApiException.notFound("Posts not found"));
+        assertOwnerAdmin(requestUid,isAdmin,p);
+        return toDetail(p);
+    }
     private PostDtos.PostListItemResponse toListItem(Post p){
         return new PostDtos.PostListItemResponse(p.id(),p.title(),p.slug(),p.publishedAt());
     }

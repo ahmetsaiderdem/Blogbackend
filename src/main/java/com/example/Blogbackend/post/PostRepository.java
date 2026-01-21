@@ -5,6 +5,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Repository
@@ -141,5 +142,63 @@ public class PostRepository {
                         LIMIT ? OFFSET ? 
                         """,POST_ROW_MAPPER,like,like,size,offset
         );
+    }
+
+    public long countMine(long authorId,String status, String q){
+        StringBuilder sql = new StringBuilder(
+                """
+                        SELECT COUNT(*) FROM posts
+                        WHERE deleted_at IS NULL AND author_id = ?
+                        """
+        );
+
+        var params= new java.util.ArrayList<Object>();
+        params.add(authorId);
+
+        if (status!=null && !status.isBlank() && !"ALL".equalsIgnoreCase(status)){
+            sql.append(" AND status = ?");
+            params.add(status.toUpperCase());
+        }
+
+        if (q!=null && !q.isBlank()){
+            sql.append(" AND (title LIKE ? OR content LIKE ?)");
+            String like = "%" + q + "%";
+            params.add(like);
+            params.add(like);
+        }
+
+        Long cnt=jdbc.queryForObject(sql.toString(), Long.class, params.toArray());
+        return cnt==null ? 0 : cnt;
+    }
+
+
+    public java.util.List<Post> listMine(long authorId,String status,String q,int size,int offset){
+        StringBuilder sql=new StringBuilder(
+                """
+                        SELECT * FROM posts
+                        WHERE deleted_at IS NULL AND author_id = ?
+                        """
+        );
+        var params=new java.util.ArrayList<Object>();
+        params.add(authorId);
+
+        if (status!=null && !status.isBlank() && !"ALL".equalsIgnoreCase(status)){
+            sql.append(" AND status = ? ");
+            params.add(status.toUpperCase());
+        }
+
+        if (q !=null && !q.isBlank()){
+            sql.append(" AND (title LIKE ? OR content LIKE ?) ");
+            String like = "%" + q + "%";
+
+            params.add(like);
+            params.add(like);
+        }
+
+        sql.append(" ORDER BY updated_at DESC LIMIT ? OFFSET ?");
+        params.add(size);
+        params.add(offset);
+
+        return jdbc.query(sql.toString(), POST_ROW_MAPPER, params.toArray());
     }
 }
